@@ -5,7 +5,7 @@ docker-compose up -d
 
 # Aguardar o MongoDB estar pronto para aceitar conexões
 echo "Aguardando o MongoDB iniciar..."
-sleep 10
+sleep 15
 
 # Executar o script de inicialização no container do MongoDB
 echo "Carregando dados iniciais..."
