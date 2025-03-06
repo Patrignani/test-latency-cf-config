@@ -1,7 +1,7 @@
 let today = new Date();
-const dbName = 'your-finances-auth'
-const db = db.getSiblingDB(dbName);
-const collections = db.getCollectionNames();
+let dbName = 'your-finances-auth'
+let db = db.getSiblingDB(dbName);
+let collections = db.getCollectionNames();
 
 function upsertDocument(db, collection, filter, document, dbName) {
     let update = { $set: document};
@@ -155,4 +155,87 @@ let user2 = {
   upsertDocument(db, "users", {username: user3.username}, user3, dbName);
 
 
+dbName = 'your-finances'
+db = db.getSiblingDB(dbName);
+collections = db.getCollectionNames();
+
+function CreateCollection(collections, db, collectionName){   
+    if (!collections.includes(collectionName)) {
+      db.createCollection(collectionName);
+    }
+  }
+  
+  function upsertDocument(db, collection, filter, document, dbName) {
+    let update = { $set: document};
+    let options = { upsert: true};
+    db.getSiblingDB(dbName)[collection].updateOne(filter, update, options);
+  }
+
+
+//create collections
+CreateCollection(collections, db, 'expense-control')
+CreateCollection(collections, db, 'cash-flow')
+CreateCollection(collections, db, 'estimated-spend')
+
+//index
+
+//expense-control
+db['expense-control'].createIndex({name: 1, account_id: 1}, {unique: true});
+
+//cash-flow
+db['cash-flow'].createIndex({name: 1, account_id: 1, type:1, expense_control_id:1 }, {unique: true});
+
+//estimated-spend
+db['estimated-spend'].createIndex({account_id: 1, "cash_flow.name": 1, expense_control_id : 1}, {unique: true});
+
+//create data-initial
+
+//expense-control
+let expenseControl ={
+    name: "casa",
+    account_id: "65bdaccac3b2d515211d779d"
+}
+
+let expenseControl2 ={
+    name: "casa",
+    account_id: "65bdaccac3b2d515211d782a"
+}
+
+upsertDocument(db, "expense-control", {account_id: expenseControl.account_id}, expenseControl, dbName);
+upsertDocument(db, "expense-control", {account_id: expenseControl2.account_id}, expenseControl2, dbName);
+
+
+dbName = 'audit-flow'
+db = db.getSiblingDB(dbName);
+collections = db.getCollectionNames();
+
+function CreateCollection(collections, db, collectionName){   
+    if (!collections.includes(collectionName)) {
+      db.createCollection(collectionName);
+    }
+  }
+  
+  function upsertDocument(db, collection, filter, document, dbName) {
+    let update = { $set: document};
+    let options = { upsert: true};
+    db.getSiblingDB(dbName)[collection].updateOne(filter, update, options);
+  }
+
+db.createUser(
+    {
+      user: 'auditAdmim',
+      pwd: 'f0cd47b4b7364a7e9b87e1a377b7dddf',
+      roles: [{ role: 'readWrite', db: dbName }],
+    },
+  );
+
+  CreateCollection(collections, db, 'auditory')
+
+//auditory index
+db.auditory.createIndex({entity_id: 1});
+db.auditory.createIndex({entity_id: 1, dated_in:1});
+db.auditory.createIndex({entity_id: 1, dated_in:1, Type:1});
+db.auditory.createIndex({entity: 1});
+db.auditory.createIndex({entity: 1, dated_in:1});
+db.auditory.createIndex({entity: 1, dated_in:1, Type:1});
 
